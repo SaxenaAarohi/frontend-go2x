@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { BASE_URL } from '../config';
 
 interface User {
   id: string;
@@ -31,7 +32,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/user/1')
+    fetch(`${BASE_URL}/api/user/1`)
       .then(res => res.json())
       .then(data => {
         setUser(data);
@@ -81,3 +82,4 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };
+
