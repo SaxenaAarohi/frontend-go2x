@@ -14,6 +14,7 @@ const ChallengeRoom = () => {
   const [opponentStatus, setOpponentStatus] = useState('Typing...');
   const [opponentSubmitted, setOpponentSubmitted] = useState(false);
   const [userSubmitted, setUserSubmitted] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [statusMsg, setStatusMsg] = useState('You are faster!');
 
@@ -54,9 +55,44 @@ const ChallengeRoom = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const validateCode = (code: string, problem: any) => {
+    const cleanCode = code.trim();
+    if (cleanCode.length < 30) return false;
+    
+    const keywords = ['function', 'return', 'const', 'let', 'var', 'if', 'for', 'while', '=>', 'console', 'math'];
+    const hasKeywords = keywords.some(k => cleanCode.includes(k));
+    if (!hasKeywords) return false;
+
+    // Problem specific logic checks
+    const lowerCode = cleanCode.toLowerCase();
+    if (problem.id === 'p1' && !lowerCode.includes('target')) return false; // Two Sum
+    if (problem.id === 'p2' && !lowerCode.includes('reverse')) return false; // Reverse String
+    if (problem.id === 'p5' && (!lowerCode.includes('stack') && !lowerCode.includes('push') && !lowerCode.includes('pop'))) return false; // Valid Parentheses
+    
+    return true;
+  };
+
   const handleSubmit = async () => {
-    if (userSubmitted) return;
+    if (userSubmitted || isValidating) return;
+    
+    setIsValidating(true);
+    setStatusMsg('Running test cases...');
+    
+    // Simulate test execution delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const isCorrect = validateCode(code, problem);
+
+    if (!isCorrect) {
+      setIsValidating(false);
+      setStatusMsg('Tests failed! Check your logic.');
+      addNotification("Your solution failed the test cases. Please check your logic and try again.", "error");
+      return;
+    }
+
+    setIsValidating(false);
     setUserSubmitted(true);
+    setStatusMsg('All tests passed!');
     
     const win = !opponentSubmitted;
     const stake = 200; // Fixed stake for coding challenge
@@ -78,6 +114,8 @@ const ChallengeRoom = () => {
       }
     } catch (err) {
       console.error(err);
+      setStatusMsg('Submission error. Try again.');
+      setIsValidating(false);
     }
   };
 
@@ -129,13 +167,13 @@ const ChallengeRoom = () => {
             />
             <button
               onClick={handleSubmit}
-              disabled={userSubmitted || result || !code.trim()}
+              disabled={userSubmitted || result || !code.trim() || isValidating}
               className="mt-6 btn-primary w-full h-14 text-lg uppercase italic tracking-tighter group overflow-hidden relative"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                <Send size={20} /> {userSubmitted ? 'Submitted' : 'Submit Solution'}
+                <Send size={20} /> {isValidating ? 'Running Tests...' : userSubmitted ? 'Submitted' : 'Submit Solution'}
               </span>
-              {!userSubmitted && !result && (
+              {!userSubmitted && !result && !isValidating && (
                 <motion.div 
                   className="absolute inset-0 bg-brand-dark"
                   initial={{ x: '-100%' }}
