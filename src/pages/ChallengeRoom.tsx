@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Swords, Zap, Trophy, AlertCircle, Clock, User, Send, Code } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../config';
 
 const ChallengeRoom = () => {
   const { user, setUser, addNotification } = useApp();
@@ -17,7 +18,7 @@ const ChallengeRoom = () => {
   const [statusMsg, setStatusMsg] = useState('You are faster!');
 
   useEffect(() => {
-    fetch('/api/problems')
+    fetch(`${BASE_URL}/api/problems`)
       .then(res => res.json())
       .then(data => setProblem(data[Math.floor(Math.random() * data.length)]));
 
@@ -61,7 +62,7 @@ const ChallengeRoom = () => {
     const stake = 200; // Fixed stake for coding challenge
 
     try {
-      const res = await fetch('/api/challenge', {
+      const res = await fetch(`${BASE_URL}/api/challenge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user?.id, stake: win ? stake : -stake })
