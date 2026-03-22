@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Clock, AlertCircle, Send, Code, Users, Star, CheckCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate, useParams } from 'react-router-dom';
+import { BASE_URL } from '../config';
 
 const ContestRoom = () => {
   const { user, setUser, addNotification } = useApp();
@@ -17,11 +18,11 @@ const ContestRoom = () => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/problems')
+    fetch(`${BASE_URL}/api/problems`)
       .then(res => res.json())
       .then(data => setProblems(data.slice(0, 4)));
 
-    fetch('/api/leaderboard')
+    fetch(`${BASE_URL}/api/leaderboard`)
       .then(res => res.json())
       .then(setLeaderboard);
 
@@ -50,7 +51,7 @@ const ContestRoom = () => {
     const timeTaken = formatTime(1800 - timeLeft);
 
     try {
-      const res = await fetch('/api/contest/submit', {
+      const res = await fetch(`${BASE_URL}/api/contest/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user?.id, score, time: timeTaken })
