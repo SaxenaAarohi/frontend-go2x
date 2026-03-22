@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Lock, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { BASE_URL } from '../config';
 
 interface Course {
   id: string;
@@ -18,7 +19,7 @@ const Courses = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
-    fetch('/api/courses')
+    fetch(`${BASE_URL}/api/courses`)
       .then(res => res.json())
       .then(setCourses);
   }, []);
