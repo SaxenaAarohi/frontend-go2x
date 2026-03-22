@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Users, Calendar, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../config';
 
 interface Contest {
   id: string;
@@ -15,7 +16,7 @@ const Contests = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/api/contests')
+    fetch(`${BASE_URL}/api/contests`)
       .then(res => res.json())
       .then(setContests);
   }, []);
