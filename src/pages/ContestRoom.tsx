@@ -14,6 +14,7 @@ const ContestRoom = () => {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes
   const [submitted, setSubmitted] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
@@ -43,11 +44,55 @@ const ContestRoom = () => {
     setAnswers(prev => ({ ...prev, [problems[currentProblemIndex].id]: val }));
   };
 
-  const handleSubmit = async () => {
-    if (submitted) return;
-    setSubmitted(true);
+  const validateCode = (code: string, problem: any) => {
+    const cleanCode = code.trim();
+    if (cleanCode.length < 30) return false;
+    
+    const keywords = ['function', 'return', 'const', 'let', 'var', 'if', 'for', 'while', '=>', 'console', 'math'];
+    const hasKeywords = keywords.some(k => cleanCode.includes(k));
+    if (!hasKeywords) return false;
 
-    const score = Object.keys(answers).length * 100; // Mock score
+    // Problem specific logic checks
+    const lowerCode = cleanCode.toLowerCase();
+    if (problem.id === 'p1' && !lowerCode.includes('target')) return false; // Two Sum
+    if (problem.id === 'p2' && !lowerCode.includes('reverse')) return false; // Reverse String
+    if (problem.id === 'p5' && (!lowerCode.includes('stack') && !lowerCode.includes('push') && !lowerCode.includes('pop'))) return false; // Valid Parentheses
+    
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (submitted || isValidating) return;
+
+    const attemptedIds = Object.keys(answers);
+    if (attemptedIds.length === 0) {
+      addNotification("You must solve at least one problem before submitting!", "error");
+      return;
+    }
+
+    setIsValidating(true);
+    addNotification("Running test cases for all solutions...", "info");
+
+    // Simulate validation delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const invalidProblems = attemptedIds.filter(id => {
+      const p = problems.find(prob => prob.id === id);
+      return !validateCode(answers[id], p);
+    });
+
+    if (invalidProblems.length > 0) {
+      setIsValidating(false);
+      const firstInvalidIndex = problems.findIndex(p => p.id === invalidProblems[0]);
+      addNotification(`Problem ${firstInvalidIndex + 1} ("${problems[firstInvalidIndex].title}") failed the test cases!`, "error");
+      setCurrentProblemIndex(firstInvalidIndex); // Switch to the failing problem
+      return;
+    }
+
+    setSubmitted(true);
+    setIsValidating(false);
+
+    const score = attemptedIds.length * 100;
     const timeTaken = formatTime(1800 - timeLeft);
 
     try {
@@ -104,10 +149,10 @@ const ContestRoom = () => {
 
           <button
             onClick={handleSubmit}
-            disabled={submitted || result}
+            disabled={submitted || result || isValidating}
             className="btn-primary w-full h-14 text-lg uppercase italic tracking-tighter shadow-xl shadow-brand/20"
           >
-            {submitted ? 'Submitted' : 'Finish Contest'}
+            {isValidating ? 'Validating...' : submitted ? 'Submitted' : 'Finish Contest'}
           </button>
         </div>
 
